@@ -2,17 +2,20 @@
 
 module Text.Parsing.Parser.String where
 
-import Data.String as S
-import Control.Monad.State (modify, gets)
+import Prelude hiding (between)
+
+import Control.Monad.State (gets, modify, modify_)
 import Data.Array (many)
 import Data.Foldable (elem, notElem)
 import Data.Maybe (Maybe(..))
 import Data.Newtype (wrap)
-import Data.String (Pattern, fromCharArray, length, singleton)
+import Data.String (Pattern, length)
+import Data.String (null) as S
+import Data.String.CodeUnits (fromCharArray, singleton)
+import Data.String.CodeUnits as S
 import Text.Parsing.Parser (ParseState(..), ParserT, fail)
 import Text.Parsing.Parser.Combinators (tryRethrow, (<?>))
 import Text.Parsing.Parser.Pos (updatePosString)
-import Prelude hiding (between)
 
 -- | This class exists to abstract over streams which support the string-like
 -- | operations which this modules needs.
@@ -40,7 +43,7 @@ string str = do
   input <- gets \(ParseState input _ _) -> input
   case indexOf (wrap str) input of
     Just 0 -> do
-      modify \(ParseState _ position _) ->
+      modify_ \(ParseState _ position _) ->
         ParseState (drop (length str) input)
                    (updatePosString position str)
                    true
@@ -54,7 +57,7 @@ anyChar = do
   case uncons input of
     Nothing -> fail "Unexpected EOF"
     Just { head, tail } -> do
-      modify \(ParseState _ position _) ->
+      modify_ \(ParseState _ position _) ->
         ParseState tail
                    (updatePosString position (singleton head))
                    true
