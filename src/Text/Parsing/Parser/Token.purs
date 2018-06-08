@@ -24,7 +24,7 @@ module Text.Parsing.Parser.Token
 import Prelude hiding (when,between)
 
 import Control.Lazy (fix)
-import Control.Monad.State (gets, modify, modify_)
+import Control.Monad.State (gets, modify_)
 import Control.MonadPlus (guard, (<|>))
 import Data.Array as Array
 import Data.Char (fromCharCode, toCharCode)
@@ -434,7 +434,7 @@ makeTokenParser (LanguageDef languageDef)
     charControl = do
         _ <- char '^'
         code <- upper
-        pure <<< fromCharCode $ toCharCode code - toCharCode 'A' + 1
+        maybe (fail "unexpected char code") pure $ fromCharCode $ toCharCode code - toCharCode 'A' + 1
 
     charNum :: ParserT String m Char
     charNum = do
@@ -443,7 +443,7 @@ makeTokenParser (LanguageDef languageDef)
            <|> ( char 'x' *> number 16 hexDigit )
         if code > 0x10FFFF
            then fail "invalid escape sequence"
-           else pure $ fromCharCode code
+           else maybe (fail "unexpected char code") pure $ fromCharCode code
 
     charEsc :: ParserT String m Char
     charEsc = choice (map parseEsc escMap)
